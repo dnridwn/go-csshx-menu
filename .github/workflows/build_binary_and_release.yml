@@ -1,0 +1,64 @@
+name: Build Binary and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: macos-13
+    strategy:
+      matrix:
+        go-version: ['1.21.x']
+    
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v4
+      - name: Setup Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Install dependencies
+        run: |
+          cd ./src
+          go get .
+      - name: Build
+        run: |
+          cd ./src
+          go build -o go-csshx-menu
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: go-csshx-menu
+          path: ./src/go-csshx-menu
+
+  create-release:
+    needs: build
+    runs-on: macos-13
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: go-csshx-menu
+          path: ./src/go-csshx-menu
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset
+        id: upload_release_asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./src/go-csshx-menu/go-csshx-menu
+          asset_name: go-csshx-menu
+          asset_content_type: binary/octet-stream
