@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -49,18 +50,18 @@ func GetFileConfPath() string {
 }
 
 func ReadConfFile(path string) (sshConf SSHConf, err error) {
-	if filepath.Ext(path) != ".yml" {
-		err = errors.New("Invalid conf file")
-		return
-	}
-
 	fileInfo, err := os.Stat(path)
 	if err != nil {
 		return
 	}
 
 	if fileInfo.IsDir() {
-		err = errors.New("Invalid path")
+		err = errors.New("Invalid path: directory provided instead of a file")
+		return
+	}
+
+	if ext := filepath.Ext(path); ext != ".yml" {
+		err = fmt.Errorf("Invalid conf file: not a YAML file (got %s)", ext)
 		return
 	}
 
