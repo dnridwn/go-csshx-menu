@@ -15,7 +15,7 @@ To run, you will need to add the following environment variables to your .env fi
 
 ## Installation
 
-- Download binary file from latest release in this repository
+- Download binary file from [Release](https://github.com/dnridwn/go-csshx-menu/releases)
 - [Setup CSSHX Server List Configuration](#fill-csshx-server-list-configuration)
 - [Set Configuration File Path Environment Variables](#set-configuration-file-path-environment-variables)
 - [Set Binary File as Executable](#set-binary-file-as-executable)
