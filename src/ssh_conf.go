@@ -14,8 +14,34 @@ type SSHServer struct {
 	IPs  []string `yaml:"ips"`
 }
 
+func (s *SSHServer) FindIP(target string) (string, bool) {
+	for _, ip := range s.IPs {
+		if ip == target {
+			return ip, true
+		}
+	}
+	return "", false
+}
+
 type SSHConf struct {
 	SSHServers []SSHServer `yaml:"ssh_servers"`
+}
+
+func (sc *SSHConf) ParseServerNames() (serverNames []string) {
+	for _, server := range sc.SSHServers {
+		serverNames = append(serverNames, server.Name)
+	}
+
+	return
+}
+
+func (sc *SSHConf) FindServerByName(target string) (SSHServer, bool) {
+	for _, server := range sc.SSHServers {
+		if server.Name == target {
+			return server, true
+		}
+	}
+	return SSHServer{}, false
 }
 
 func GetFileConfPath() string {
@@ -45,14 +71,6 @@ func ReadConfFile(path string) (sshConf SSHConf, err error) {
 
 	if err = yaml.Unmarshal(content, &sshConf); err != nil {
 		return
-	}
-
-	return
-}
-
-func ParseServerNames(sshConf SSHConf) (serverNames []string) {
-	for _, server := range sshConf.SSHServers {
-		serverNames = append(serverNames, server.Name)
 	}
 
 	return
