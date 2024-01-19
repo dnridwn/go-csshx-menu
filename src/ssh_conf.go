@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -14,8 +15,34 @@ type SSHServer struct {
 	IPs  []string `yaml:"ips"`
 }
 
+func (s *SSHServer) FindIP(target string) (string, bool) {
+	for _, ip := range s.IPs {
+		if ip == target {
+			return ip, true
+		}
+	}
+	return "", false
+}
+
 type SSHConf struct {
 	SSHServers []SSHServer `yaml:"ssh_servers"`
+}
+
+func (sc *SSHConf) ParseServerNames() (serverNames []string) {
+	for _, server := range sc.SSHServers {
+		serverNames = append(serverNames, server.Name)
+	}
+
+	return
+}
+
+func (sc *SSHConf) FindServerByName(target string) (SSHServer, bool) {
+	for _, server := range sc.SSHServers {
+		if server.Name == target {
+			return server, true
+		}
+	}
+	return SSHServer{}, false
 }
 
 func GetFileConfPath() string {
@@ -23,18 +50,18 @@ func GetFileConfPath() string {
 }
 
 func ReadConfFile(path string) (sshConf SSHConf, err error) {
-	if filepath.Ext(path) != ".yml" {
-		err = errors.New("Invalid conf file")
-		return
-	}
-
 	fileInfo, err := os.Stat(path)
 	if err != nil {
 		return
 	}
 
 	if fileInfo.IsDir() {
-		err = errors.New("Invalid path")
+		err = errors.New("Invalid path: directory provided instead of a file")
+		return
+	}
+
+	if ext := filepath.Ext(path); ext != ".yml" {
+		err = fmt.Errorf("Invalid conf file: not a YAML file (got %s)", ext)
 		return
 	}
 
@@ -45,14 +72,6 @@ func ReadConfFile(path string) (sshConf SSHConf, err error) {
 
 	if err = yaml.Unmarshal(content, &sshConf); err != nil {
 		return
-	}
-
-	return
-}
-
-func ParseServerNames(sshConf SSHConf) (serverNames []string) {
-	for _, server := range sshConf.SSHServers {
-		serverNames = append(serverNames, server.Name)
 	}
 
 	return

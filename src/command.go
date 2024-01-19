@@ -21,3 +21,16 @@ func OpenCSSHX(server SSHServer) {
 		log.Panic(err)
 	}
 }
+
+func OpenCSSHXSpecificIP(server SSHServer, ip string) {
+	cmd := exec.Command(
+		"osascript",
+		"-s", "h",
+		"-e", `tell application "Terminal" to activate do script "`+
+			fmt.Sprintf(baseCommand, server.User, ip)+`"`,
+	)
+
+	if err := cmd.Run(); err != nil {
+		log.Panic(err)
+	}
+}
