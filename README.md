@@ -57,8 +57,7 @@ chmod +x go-csshx-menu
 ```
 ## Screenshots
 
-![App Screenshot](./screenshots/home.png)
-![App Screenshot](./screenshots/ip_list.png)
+![App Screenshot](./screenshots/home_v2.png)
 
 
 ## Acknowledgements

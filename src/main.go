@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -12,27 +13,6 @@ const (
 	version = "v1.1"
 	author  = "Den Ridwan Saputra (https://github.com/dnridwn)"
 )
-
-var (
-	sshConf     SSHConf
-	serverNames []string
-	pages       *tview.Pages
-)
-
-func main() {
-	app := tview.NewApplication()
-	defer handlePanic(app)
-
-	sshConf = loadConfiguration()
-	serverNames = sshConf.ParseServerNames()
-
-	pages = tview.NewPages()
-	pages.AddPage("Home", homeModal(), true, true)
-
-	if err := app.SetRoot(pages, true).EnableMouse(true).Run(); err != nil {
-		panic(err)
-	}
-}
 
 func handlePanic(app *tview.Application) {
 	if err := recover(); err != nil {
@@ -50,33 +30,64 @@ func loadConfiguration() SSHConf {
 	return conf
 }
 
-func homeModal() *tview.Modal {
-	m := tview.NewModal()
-	m.SetText(fmt.Sprintf("%s (%s)\nby %s\nChoose Server", appName, version, author))
-	m.AddButtons(serverNames)
-	m.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-		if server, found := sshConf.FindServerByName(buttonLabel); found {
-			pages.AddAndSwitchToPage(server.Name, ipListModal(server), true)
+func main() {
+	app := tview.NewApplication()
+	defer handlePanic(app)
+
+	ipView := tview.NewFlex()
+	serverView := tview.NewFlex()
+	homeView := tview.NewFlex()
+
+	sshConf := loadConfiguration()
+	serverNames := sshConf.ParseServerNames()
+
+	ipView.SetBorder(true)
+	ipView.SetTitle("CHOOSE IP")
+	ipView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyESC {
+			ipView.Clear()
+			app.SetFocus(serverView)
+		}
+		return event
+	})
+
+	serverList := tview.NewList()
+	serverList.ShowSecondaryText(false)
+	serverList.SetSelectedFunc(func(i int, s1, s2 string, r rune) {
+		if server, found := sshConf.FindServerByName(s1); found {
+			ipList := tview.NewList()
+			ipList.ShowSecondaryText(false)
+			ipList.SetSelectedFunc(func(i int, s1, s2 string, r rune) {
+				switch s1 {
+				case "All":
+					OpenCSSHX(server)
+				default:
+					OpenCSSHXSpecificIP(server, s1)
+				}
+			})
+			for _, ip := range server.IPs {
+				ipList.AddItem(ip, "", '-', nil)
+			}
+
+			ipView.Clear()
+			ipView.AddItem(ipList, 0, 1, true)
+			app.SetFocus(ipView)
 		}
 	})
-	return m
-}
+	for _, serverName := range serverNames {
+		serverList.AddItem(serverName, "", '-', nil)
+	}
 
-func ipListModal(server SSHServer) *tview.Modal {
-	var buttons = []string{"All", "Back"}
-	buttons = append(buttons[:1], append(server.IPs, buttons[1:]...)...)
+	serverView.SetBorder(true)
+	serverView.SetTitle("CHOOSE SERVER")
+	serverView.AddItem(serverList, 0, 1, true)
 
-	m := tview.NewModal()
-	m.SetText(fmt.Sprintf("%s (%s)\nby %s\nChoose IP", appName, version, author))
-	m.AddButtons(buttons)
-	m.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-		if buttonLabel == "All" {
-			OpenCSSHX(server)
-		} else if buttonLabel == "Back" {
-			pages.RemovePage(server.Name)
-		} else if ip, found := server.FindIP(buttonLabel); found {
-			OpenCSSHXSpecificIP(server, ip)
-		}
-	})
-	return m
+	homeView.SetBorder(true)
+	homeView.SetTitle(fmt.Sprintf("%s %s by %s", appName, version, author))
+	homeView.AddItem(serverView, 0, 1, true)
+	homeView.AddItem(ipView, 0, 1, false)
+
+	if err := app.SetRoot(homeView, true).EnableMouse(true).Run(); err != nil {
+		panic(err)
+	}
 }
