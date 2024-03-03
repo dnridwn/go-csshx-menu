@@ -65,6 +65,7 @@ func main() {
 					OpenCSSHXSpecificIP(server, s1)
 				}
 			})
+			ipList.AddItem("All", "", '-', nil)
 			for _, ip := range server.IPs {
 				ipList.AddItem(ip, "", '-', nil)
 			}
