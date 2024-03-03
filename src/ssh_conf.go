@@ -56,12 +56,12 @@ func ReadConfFile(path string) (sshConf SSHConf, err error) {
 	}
 
 	if fileInfo.IsDir() {
-		err = errors.New("Invalid path: directory provided instead of a file")
+		err = errors.New("invalid path: directory provided instead of a file")
 		return
 	}
 
 	if ext := filepath.Ext(path); ext != ".yml" {
-		err = fmt.Errorf("Invalid conf file: not a YAML file (got %s)", ext)
+		err = fmt.Errorf("invalid conf file: not a YAML file (got %s)", ext)
 		return
 	}
 
