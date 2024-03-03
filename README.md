@@ -35,9 +35,9 @@ ssh_servers:
   - name: "Server 2"
     user: "root"
     ips:
-      - "123.456.789.10"
-      - "123.456.789.11"
-      - "123.456.789.12"
+      - "123.456.789.20"
+      - "123.456.789.21"
+      - "123.456.789.22"
 ```
 Then save as YAML file (example: conf.yml)
 
