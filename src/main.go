@@ -10,7 +10,7 @@ import (
 
 const (
 	appName = "GO CSSHX Menu"
-	version = "v1.1"
+	version = "v2.0"
 	author  = "Den Ridwan Saputra (https://github.com/dnridwn)"
 )
 
